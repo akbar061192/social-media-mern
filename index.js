@@ -10,6 +10,13 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { register } from './controllers/auth.js';
 import authRoutes from './routes/auth.js';
+import userRoutes from './routes/users.js';
+import postRoutes from './routes/post.js';
+import { verifyToken } from './middleware/auth.js';
+import { createPost } from './controllers/post.js';
+import { users, posts } from './data/index.js';
+import Post from './models/Post.js';
+import User from './models/User.js';
 
 /* CONFIGURATIONS  */
 const __filename = fileURLToPath(import.meta.url);
@@ -41,9 +48,12 @@ const upload = multer({ storage });
 
 /* ROUTES WITH FILES */
 app.post('/api/auth/register', upload.single('picture'), register);
+app.post('/api/post', verifyToken, upload.single('picture'), createPost);
 
 /* ROUTES */
 app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/post', postRoutes);
 
 /* MONGOOSE SETUP */
 const PORT = process.env.PORT || 6000;
@@ -55,6 +65,11 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(() => {
+    console.log('Connected to DB');
     app.listen(PORT, () => console.log(`Server listening on port ${PORT}...`));
+
+    /* ADDING DUMMY DATA FOR FIRST TIME LOAD AFTER SERVER STARTS */
+    // User.insertMany(users);
+    // Post.insertMany(posts);
   })
   .catch(error => console.log(`Something went wrong see error =>> ${error} `));
